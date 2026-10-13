@@ -35,8 +35,8 @@ class Facing(Enum):
 # Q1 机器人自检（题面 Q1·自检状态计算与报告生成）
 # ---------------------------------------------------------------------------
 def hp_ratio(hp, max_hp):
-    """TODO(Q1)：血量百分比，返回 0-100 的 int；计算与边界规则见题面 Q1 规范。"""
-    raise NotImplementedError("Q1 hp_ratio：题面 Q1·血量百分比与精度保障")
+    """Return the integer HP percentage for valid positive limits."""
+    return hp * 100 // max_hp
 
 
 def status_report(name, robot_type, hp, max_hp, battery):
