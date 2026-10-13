@@ -266,9 +266,46 @@ class SentryState(Enum):
 
 
 def decide(sensor, state, hp, heat):
-    """TODO(Q5)：纯函数决策，返回 (action: str, new_state: SentryState)；
-    sensor 字段契约、R1-R7 规则表与非法输入处理见题面 Q5 规范。"""
-    raise NotImplementedError("Q5 decide：题面 Q5·决策规则表 R1-R7")
+    """Apply R1 through R7 in order; heat does not override those rules."""
+    required = {"enemy_frames", "enemy_dist", "robot_type", "max_hp"}
+    if not isinstance(state, SentryState):
+        raise ValueError("Unknown sentry state")
+    if not isinstance(sensor, dict) or not required.issubset(sensor):
+        raise ValueError("Missing sensor fields")
+    frames = sensor["enemy_frames"]
+    if not isinstance(frames, (tuple, list)) or not 1 <= len(frames) <= 6:
+        raise ValueError("Enemy history must contain one to six frames")
+    visible = bool(frames[-1])
+    distance = sensor["enemy_dist"]
+    if type(distance) is not int or distance < 0:
+        distance = float("inf")
+    robot_type = sensor["robot_type"]
+    if robot_type != "HERO":
+        robot_type = "INFANTRY"
+    hp_pct = hp_ratio(hp, sensor["max_hp"])
+    if hp_pct <= 30:
+        return "RETREAT", SentryState.RETREAT
+    if state is SentryState.RETREAT:
+        if hp_pct >= 60:
+            return "RETURN", SentryState.RETURN
+        return "RETREAT", SentryState.RETREAT
+    if state is SentryState.RETURN:
+        return "MOVE_BASE", SentryState.PATROL
+    if state is SentryState.ENGAGE and not visible:
+        if len(frames) >= 3 and not any(frames[-3:]):
+            return "SCAN", SentryState.SUSPECT
+        return "HOLD_FIRE", SentryState.ENGAGE
+    if visible:
+        confirmed = len(frames) >= 2 and bool(frames[-2])
+        if state is SentryState.ENGAGE or confirmed:
+            if distance <= 3:
+                return "SHOOT", SentryState.ENGAGE
+            action = "MOVE_RIGHT" if robot_type == "HERO" else "MOVE_LEFT"
+            return action, SentryState.ENGAGE
+        return "SCAN", SentryState.SUSPECT
+    if state is SentryState.PATROL:
+        return "PATROL_MOVE", SentryState.PATROL
+    return "SCAN", SentryState.SUSPECT
 
 
 # ---------------------------------------------------------------------------
