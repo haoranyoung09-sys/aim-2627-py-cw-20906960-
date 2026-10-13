@@ -11,6 +11,7 @@
 - `python main.py`（或 PYTHONPATH=src python -m main）可看 ASCII 演示。
 """
 import json
+from collections import deque
 from enum import Enum
 
 
@@ -311,16 +312,57 @@ def decide(sensor, state, hp, heat):
 # ---------------------------------------------------------------------------
 # Q6 巡逻任务（题面 Q6·巡逻契约与验收阈值）
 # ---------------------------------------------------------------------------
+def _escape_route(grid):
+    """Find a bounded shortest escape route without changing the grid."""
+    start, target = grid.current_pos, grid.enemy_pos
+    queue = deque([start])
+    parents = {start: None}
+    while queue:
+        pos = queue.popleft()
+        if pos == target:
+            route = deque()
+            while parents[pos] is not None:
+                previous, direction = parents[pos]
+                route.appendleft(direction)
+                pos = previous
+            return route
+        for direction in (Facing.RIGHT, Facing.UP, Facing.LEFT, Facing.DOWN):
+            dx, dy = direction.delta
+            nxt = (pos[0] + dx, pos[1] + dy)
+            if nxt not in parents and not grid.is_blocked(*nxt):
+                parents[nxt] = (pos, direction)
+                queue.append(nxt)
+    return deque()
+
+
 def run_patrol(grid, max_steps=500):
-    """Run greedy navigation and return per-run movement statistics."""
+    """Use greedy steps, switching to a bounded escape route when stalled."""
     steps = 0
     initial_collisions = grid.collision_count
     visited = {grid.current_pos}
+    escape = deque()
     while steps < max_steps and grid.fuel > 0 and not grid.found_enemy:
-        direction = next_step_toward(grid.current_pos, grid.enemy_pos,
-                                     grid.obstacles, grid.facing)
-        while grid.facing is not direction:
-            grid.turn_right()
+        pos, target = grid.current_pos, grid.enemy_pos
+        direction = next_step_toward(pos, target, grid.obstacles, grid.facing)
+        if escape:
+            direction = escape.popleft()
+        else:
+            dx, dy = direction.delta
+            nxt = (pos[0] + dx, pos[1] + dy)
+            distance = abs(pos[0] - target[0]) + abs(pos[1] - target[1])
+            remaining = abs(nxt[0] - target[0]) + abs(nxt[1] - target[1])
+            if grid.is_blocked(*nxt) or remaining >= distance:
+                escape = _escape_route(grid)
+                if not escape:
+                    break
+                direction = escape.popleft()
+        order = (Facing.UP, Facing.RIGHT, Facing.DOWN, Facing.LEFT)
+        turns = (order.index(direction) - order.index(grid.facing)) % 4
+        if turns == 3:
+            grid.turn_left()
+        else:
+            for _ in range(turns):
+                grid.turn_right()
         grid.move_forward()
         steps += 1
         visited.add(grid.current_pos)
