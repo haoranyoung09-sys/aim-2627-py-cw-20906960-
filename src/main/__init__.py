@@ -79,10 +79,13 @@ def analyze_damage_log(lines):
             if line.startswith("{"):
                 event = json.loads(line)
                 armor, damage = event["armor"], event["damage"]
-                if armor not in by_armor or damage <= 0:
+                if (not isinstance(armor, str) or armor not in by_armor
+                        or type(damage) is not int or damage <= 0):
                     continue
                 if "id" in event:
                     event_id = event["id"]
+                    if type(event_id) not in (int, str):
+                        continue
                     if event_id in seen_ids:
                         continue
                     seen_ids.add(event_id)
@@ -91,7 +94,10 @@ def analyze_damage_log(lines):
                 events = []
                 for segment in line.split(","):
                     label, value = segment.split(":")
-                    damage = int(value.strip())
+                    value = value.strip()
+                    if not value.isascii() or not value.isdigit():
+                        raise ValueError("Invalid integer damage")
+                    damage = int(value)
                     if damage <= 0:
                         raise ValueError("Damage must be positive")
                     events.append((labels[label.strip()], damage))
