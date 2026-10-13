@@ -90,23 +90,14 @@ def log(message, history=None):
 # 旧版巡逻模拟
 # ---------------------------------------------------------------------------
 def run_legacy_sim(rounds, stamina_start=100):
-    """旧版巡逻模拟。
-
-    契约（验收以本条为准）：
-    - 依次执行第 0 .. rounds-1 轮，每轮基础消耗 8 点体力；
-    - 第 4 轮起（轮号 >= 3）每轮额外消耗 5 点；
-    - 任一轮结束后体力 <= 20 时立即终止，不再继续后面的轮；
-    - trace 记录 (轮号, 该轮结束时的体力)；
-    - 返回 {"rounds": 已执行轮数, "stamina": 剩余体力, "trace": trace}。
-    """
+    """Execute numbered rounds, stopping after stamina reaches 20 or less."""
     stamina = stamina_start
-    round_ = 0
     trace = []
-    while round_ < rounds:
+    for round_ in range(rounds):
         stamina -= 8
         if round_ >= 3:
             stamina -= 5
         trace.append((round_, stamina))
-        if stamina > 20:
+        if stamina <= 20:
             break
     return {"rounds": len(trace), "stamina": stamina, "trace": trace}
