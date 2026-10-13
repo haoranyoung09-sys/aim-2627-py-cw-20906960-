@@ -35,8 +35,14 @@ class Facing(Enum):
 # Q1 机器人自检（题面 Q1·自检状态计算与报告生成）
 # ---------------------------------------------------------------------------
 def hp_ratio(hp, max_hp):
-    """Return the integer HP percentage for valid positive limits."""
-    return hp * 100 // max_hp
+    """Return a clamped percentage using exact integer arithmetic."""
+    try:
+        hp, max_hp = int(hp), int(max_hp)
+    except (TypeError, ValueError, OverflowError):
+        return 0
+    if max_hp <= 0:
+        return 0
+    return max(0, min(100, hp * 100 // max_hp))
 
 
 def status_report(name, robot_type, hp, max_hp, battery):
