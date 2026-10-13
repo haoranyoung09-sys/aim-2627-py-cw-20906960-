@@ -55,13 +55,11 @@ def first_positive(samples):
 
 
 def calibrate(samples):
-    """以第一个正样本为基线计算累计漂移：sum(s - baseline)。
-    样本为空或没有正样本时，漂移为 0。"""
+    """Sum drift from the first positive sample; absent baselines yield zero."""
     baseline = first_positive(samples)
-    drift = 0
-    for s in samples:
-        drift += s - baseline
-    return drift
+    if baseline is None:
+        return 0
+    return sum(sample - baseline for sample in samples)
 
 
 def summarize_events(events, max_id):
