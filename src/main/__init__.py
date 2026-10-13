@@ -374,8 +374,9 @@ def run_patrol(grid, max_steps=500):
 
 
 def report_to_json(stats):
-    """TODO(Q6)：把 stats 序列化为确定性的 JSON 字符串，见题面 Q6 规范。"""
-    raise NotImplementedError("Q6 report_to_json：题面 Q6·报告序列化")
+    """Serialize a report deterministically, independent of insertion order."""
+    return json.dumps(stats, sort_keys=True, ensure_ascii=False,
+                      separators=(",", ":"), allow_nan=False)
 
 
 # ---------------------------------------------------------------------------
