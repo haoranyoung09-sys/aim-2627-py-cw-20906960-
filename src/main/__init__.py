@@ -312,9 +312,23 @@ def decide(sensor, state, hp, heat):
 # Q6 巡逻任务（题面 Q6·巡逻契约与验收阈值）
 # ---------------------------------------------------------------------------
 def run_patrol(grid, max_steps=500):
-    """TODO(Q6)：sense → decide → act 主循环；
-    循环结构、终止条件、脱困自由度与统计返回契约见题面 Q6 规范。"""
-    raise NotImplementedError("Q6 run_patrol：题面 Q6·主循环与统计契约")
+    """Run greedy navigation and return per-run movement statistics."""
+    steps = 0
+    initial_collisions = grid.collision_count
+    visited = {grid.current_pos}
+    while steps < max_steps and grid.fuel > 0 and not grid.found_enemy:
+        direction = next_step_toward(grid.current_pos, grid.enemy_pos,
+                                     grid.obstacles, grid.facing)
+        while grid.facing is not direction:
+            grid.turn_right()
+        grid.move_forward()
+        steps += 1
+        visited.add(grid.current_pos)
+    return {"steps": steps,
+            "collisions": grid.collision_count - initial_collisions,
+            "visited_count": len(visited),
+            "found_enemy": bool(grid.found_enemy),
+            "success": bool(grid.found_enemy)}
 
 
 def report_to_json(stats):
