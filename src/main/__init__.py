@@ -207,17 +207,29 @@ class SentryGrid:
         self._pos = position
 
     def move_forward(self):
-        """TODO(Q3)：朝当前 facing 前进一格，返回执行后的位置；
-        碰撞、耗电与断电语义见题面 Q3 规范。"""
-        raise NotImplementedError("Q3 move_forward：题面 Q3·前进、碰撞与断电")
+        """Attempt one move, consuming fuel even when blocked."""
+        if self._fuel <= 0:
+            return self._pos
+        self._fuel -= 1
+        dx, dy = self._facing.delta
+        position = (self._pos[0] + dx, self._pos[1] + dy)
+        if self.is_blocked(*position):
+            self._collision_count += 1
+        else:
+            self._pos = position
+        return self._pos
 
     def turn_left(self):
-        """TODO(Q3)：原地左转 90°，返回新的 Facing（不耗电）。"""
-        raise NotImplementedError("Q3 turn_left")
+        """Rotate counterclockwise without consuming fuel."""
+        order = (Facing.UP, Facing.LEFT, Facing.DOWN, Facing.RIGHT)
+        self._facing = order[(order.index(self._facing) + 1) % 4]
+        return self._facing
 
     def turn_right(self):
-        """TODO(Q3)：原地右转 90°，返回新的 Facing（不耗电）。"""
-        raise NotImplementedError("Q3 turn_right")
+        """Rotate clockwise without consuming fuel."""
+        order = (Facing.UP, Facing.RIGHT, Facing.DOWN, Facing.LEFT)
+        self._facing = order[(order.index(self._facing) + 1) % 4]
+        return self._facing
 
 
 # ---------------------------------------------------------------------------
