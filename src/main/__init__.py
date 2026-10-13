@@ -383,8 +383,25 @@ def report_to_json(stats):
 # Bonus：BFS 全局最短路（题面 Bonus·BFS 语义与排行榜）
 # ---------------------------------------------------------------------------
 def bfs_path_length(start, target, obstacles):
-    """TODO(Bonus)：BFS 全局最短路步数；返回语义与边界职责见题面 Bonus 规范。"""
-    raise NotImplementedError("Bonus bfs_path_length")
+    """Return shortest four-neighbor distance; the caller supplies borders."""
+    start, target = tuple(start), tuple(target)
+    if start == target:
+        return 0
+    obstacles = set(obstacles)
+    if start in obstacles or target in obstacles:
+        return -1
+    queue = deque([(start, 0)])
+    visited = {start}
+    while queue:
+        (x, y), distance = queue.popleft()
+        for nxt in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if nxt in obstacles or nxt in visited:
+                continue
+            if nxt == target:
+                return distance + 1
+            visited.add(nxt)
+            queue.append((nxt, distance + 1))
+    return -1
 
 
 # ---------------------------------------------------------------------------
