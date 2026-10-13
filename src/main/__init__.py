@@ -102,15 +102,20 @@ def analyze_damage_log(lines):
                     if damage <= 0:
                         raise ValueError("Damage must be positive")
                     events.append((labels[label.strip()], damage))
-        except (ValueError, TypeError, KeyError):
+        except (ValueError, TypeError, KeyError, RecursionError):
             continue
         for armor, damage in events:
             by_armor[armor] += damage
             count += 1
     total = sum(by_armor.values())
+    try:
+        average = round(total / count, 2) if count else 0.0
+    except OverflowError:
+        # Keep exact integer totals when the float average cannot fit.
+        average = float("inf")
     return {"total": total, "by_armor": by_armor,
             "most_hit": max(by_armor, key=by_armor.get) if count else None,
-            "avg": round(total / count, 2) if count else 0.0}
+            "avg": average}
 
 
 # ---------------------------------------------------------------------------
