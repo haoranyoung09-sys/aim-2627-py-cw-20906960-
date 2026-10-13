@@ -60,9 +60,50 @@ def status_report(name, robot_type, hp, max_hp, battery):
 # Q2 战斗日志分析（题面 Q2·多源日志解析与统计）
 # ---------------------------------------------------------------------------
 def analyze_damage_log(lines):
-    """TODO(Q2)：解析混合格式伤害日志，返回固定契约的统计 dict；
-    行格式、去重与统计口径见题面 Q2 规范。"""
-    raise NotImplementedError("Q2 analyze_damage_log：题面 Q2·多源日志解析与统计")
+    """Aggregate valid damage events; discard malformed lines atomically."""
+    by_armor = dict.fromkeys(("front", "left", "right"), 0)
+    labels = {"F": "front", "L": "left", "R": "right"}
+    seen_ids = set()
+    count = 0
+    try:
+        iterator = iter(lines)
+    except TypeError:
+        iterator = iter(())
+    for line in iterator:
+        if not isinstance(line, str):
+            continue
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        try:
+            if line.startswith("{"):
+                event = json.loads(line)
+                armor, damage = event["armor"], event["damage"]
+                if armor not in by_armor or damage <= 0:
+                    continue
+                if "id" in event:
+                    event_id = event["id"]
+                    if event_id in seen_ids:
+                        continue
+                    seen_ids.add(event_id)
+                events = [(armor, damage)]
+            else:
+                events = []
+                for segment in line.split(","):
+                    label, value = segment.split(":")
+                    damage = int(value.strip())
+                    if damage <= 0:
+                        raise ValueError("Damage must be positive")
+                    events.append((labels[label.strip()], damage))
+        except (ValueError, TypeError, KeyError):
+            continue
+        for armor, damage in events:
+            by_armor[armor] += damage
+            count += 1
+    total = sum(by_armor.values())
+    return {"total": total, "by_armor": by_armor,
+            "most_hit": max(by_armor, key=by_armor.get) if count else None,
+            "avg": round(total / count, 2) if count else 0.0}
 
 
 # ---------------------------------------------------------------------------
