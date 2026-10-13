@@ -36,14 +36,19 @@ def total_route_meters(points):
 # 事件日志
 # ---------------------------------------------------------------------------
 def parse_event(line):
-    """解析一行事件日志，形如 "MOVE,3" / "SCAN,0" / "IDLE,1"。
-    合法返回 {"type": str, "count": int}；脏行返回 None（不得抛异常）。"""
+    """Parse MOVE/SCAN/IDLE with a nonnegative count; reject dirty input."""
+    if not isinstance(line, str):
+        return None
     parts = line.strip().split(",")
     if len(parts) != 2 or parts[0] not in ("MOVE", "SCAN", "IDLE"):
         return None
-    if not parts[1].isdigit():
+    if not parts[1].isascii() or not parts[1].isdigit():
         return None
-    return {"type": parts[0], "count": int(parts[1])}
+    try:
+        count = int(parts[1])
+    except ValueError:
+        return None
+    return {"type": parts[0], "count": count}
 
 
 def first_positive(samples):
