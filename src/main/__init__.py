@@ -198,8 +198,13 @@ class SentryGrid:
 
     @current_pos.setter
     def current_pos(self, value):
-        """TODO(Q3)：位置 setter；三重输入校验见题面 Q3 规范第 1 条。"""
-        raise NotImplementedError("Q3 current_pos.setter：题面 Q3·位置校验三步")
+        """Normalize and clamp a pair; reject obstacles without changing position."""
+        if not isinstance(value, (tuple, list)) or len(value) != 2:
+            raise TypeError("Position must be a tuple or list of length two")
+        position = self._clamp_cell(value)
+        if position in self._obstacles:
+            raise ValueError("Position cannot be an obstacle")
+        self._pos = position
 
     def move_forward(self):
         """TODO(Q3)：朝当前 facing 前进一格，返回执行后的位置；
