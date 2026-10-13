@@ -25,12 +25,11 @@ def segment_length_cm(p1, p2):
 
 
 def total_route_meters(points):
-    """整条巡逻路线的长度，单位：米。
-    points 为检查点序列 [(x, y), ...]，至少两个点。"""
-    distance_in_meters = 0
+    """Return the Manhattan route length in meters, not centimeters."""
+    distance_in_cm = 0
     for i in range(len(points) - 1):
-        distance_in_meters += segment_length_cm(points[i], points[i + 1])
-    return distance_in_meters
+        distance_in_cm += segment_length_cm(points[i], points[i + 1])
+    return distance_in_cm / 100
 
 
 # ---------------------------------------------------------------------------
