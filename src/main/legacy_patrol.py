@@ -78,9 +78,10 @@ def summarize_events(events, max_id):
     return {"events": used, "steps": steps}
 
 
-def log(message, history=[]):
-    """向历史追加一条日志并返回整个历史列表。
-    不显式传入 history 时，每次调用都从空历史开始。"""
+def log(message, history=None):
+    """Append to explicit history or create a new list for each call."""
+    if history is None:
+        history = []
     history.append(message)
     return history
 
